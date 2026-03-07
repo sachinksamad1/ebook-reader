@@ -1,0 +1,100 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+docs/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains object files and architectural drawings. The .vscode folder should be ignored, although .vscode/extensions.json and .vscode/launch.json may be included.
+.vscode/
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/build*/
+/coverage/
+
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# iOS/XCode related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*backup.development.xcconfig
+**/ios/**/*backup.release.xcconfig
+**/ios/**/*backup.testing.xcconfig
+**/ios/**/*backup.profile.xcconfig
+**/ios/**/*backup.debug.xcconfig
+**/ios/**/*default.profile.xcconfig
+**/ios/**/*default.release.xcconfig
+**/ios/**/*default.debug.xcconfig
+**/ios/**/.generated/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+# Windows
+**/windows/flutter/ephemeral/
+**/windows/flutter/ephemeral/.plugin_symlinks/
+
+# Linux
+**/linux/flutter/ephemeral/
+
+# Web
+**/web/
+
+# Exceptions to above rules.
+!**/android/**/gradle-wrapper.properties
+!**/ios/**/default.pbxuser
+
+# Key files / secrets
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+.env
+*.keystore
+*.jks
+key.properties
+
+# Node (Husky)
+node_modules/

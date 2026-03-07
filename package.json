@@ -1,0 +1,22 @@
+{
+  "name": "ebook_reader",
+  "version": "1.0.0",
+  "description": "A minimal, fast, and distraction-free ebook reader built with **Flutter**, designed for language learners, students, and knowledge workers.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

@@ -1,0 +1,78 @@
+#!/bin/sh
+
+set -e
+
+echo "🔍 Pre-commit checks running..."
+echo ""
+
+# ═══════════════════════════════════════════
+# 1. SECRET FILE DETECTION
+# ═══════════════════════════════════════════
+
+echo "🔒 Checking for secret/sensitive files..."
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+SECRETS_FOUND=false
+
+# Check each staged file against secret patterns
+for file in $STAGED_FILES; do
+  case "$file" in
+    *google-services.json | *GoogleService-Info.plist | *firebase_options.dart)
+      echo "  ❌ BLOCKED: $file (Firebase secret)"
+      SECRETS_FOUND=true
+      ;;
+    *.env | *.env.local | *.env.production)
+      echo "  ❌ BLOCKED: $file (environment file)"
+      SECRETS_FOUND=true
+      ;;
+    *.keystore | *.jks | *key.properties)
+      echo "  ❌ BLOCKED: $file (signing key)"
+      SECRETS_FOUND=true
+      ;;
+    *service-account*.json | *-credentials.json)
+      echo "  ❌ BLOCKED: $file (service credentials)"
+      SECRETS_FOUND=true
+      ;;
+  esac
+done
+
+# Check for hardcoded API keys in staged .dart files
+for file in $STAGED_FILES; do
+  case "$file" in
+    *.dart)
+      if [ -f "$file" ]; then
+        if grep -qE '(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{48}|ghp_[a-zA-Z0-9]{36})' "$file" 2>/dev/null; then
+          echo "  ❌ BLOCKED: $file (hardcoded API key detected)"
+          SECRETS_FOUND=true
+        fi
+      fi
+      ;;
+  esac
+done
+
+if [ "$SECRETS_FOUND" = true ]; then
+  echo ""
+  echo "🚫 Commit REJECTED: Secret or sensitive files detected!"
+  echo "   Remove them from staging with: git reset HEAD <file>"
+  echo "   Make sure they are listed in .gitignore"
+  exit 1
+fi
+
+echo "  ✅ No secrets detected"
+echo ""
+
+# ═══════════════════════════════════════════
+# 2. FLUTTER CODE QUALITY CHECK
+# ═══════════════════════════════════════════
+
+echo "🔬 Running flutter analyze..."
+
+if ! flutter analyze; then
+  echo ""
+  echo "🚫 Commit REJECTED: flutter analyze found issues!"
+  echo "   Fix the issues above and try again."
+  exit 1
+fi
+
+echo ""
+echo "✅ All pre-commit checks passed!"
