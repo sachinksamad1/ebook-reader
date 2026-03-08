@@ -31,7 +31,7 @@ class BookCard extends StatelessWidget {
           children: [
             // Cover image or placeholder
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -55,7 +55,7 @@ class BookCard extends StatelessWidget {
 
             // Book info
             Expanded(
-              flex: 2,
+              flex: 1,
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(

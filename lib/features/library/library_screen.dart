@@ -123,7 +123,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.65,
+                childAspectRatio: 0.58,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),

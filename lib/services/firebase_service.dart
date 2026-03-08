@@ -9,6 +9,7 @@ import '../models/book.dart';
 import '../models/highlight.dart';
 import '../models/note.dart';
 import '../models/vocabulary.dart';
+import '../models/user_settings.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instanceFor(
@@ -285,5 +286,32 @@ class FirebaseService {
 
   Future<void> deleteVocabularyWord(String wordId) async {
     await _firestore.collection('vocabulary').doc(wordId).delete();
+  }
+
+  // ════════════════════════════════════════
+  // USER SETTINGS
+  // ════════════════════════════════════════
+
+  /// Stream global settings for the current user.
+  Stream<UserSettings> streamUserSettings() {
+    return _firestore
+        .collection('user_settings')
+        .doc(_currentUserId)
+        .snapshots()
+        .map((doc) {
+          if (doc.exists) {
+            return UserSettings.fromFirestore(doc);
+          }
+          // Return defaults if no settings document exists yet
+          return UserSettings(userId: _currentUserId);
+        });
+  }
+
+  /// Update the global user settings document.
+  Future<void> updateUserSettings(UserSettings settings) async {
+    await _firestore
+        .collection('user_settings')
+        .doc(_currentUserId)
+        .set(settings.toFirestore(), SetOptions(merge: true));
   }
 }

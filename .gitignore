@@ -92,9 +92,37 @@ google-services.json
 GoogleService-Info.plist
 firebase_options.dart
 .env
+.env.*
+*.env
 *.keystore
 *.jks
 key.properties
+
+# Cloud and API Credentials
+*.pem
+*.cer
+*.p12
+*.pfx
+*.cert
+*.key
+credentials.json
+service-account.json
+serviceAccountKey.json
+client_secret.json
+client_secrets.json
+oauth*.json
+
+# Local Configuration and Auth
+.npmrc
+.netrc
+.auth
+.htpasswd
+
+# Private SSH Keys
+id_rsa
+id_dsa
+id_ed25519
+id_ecdsa
 
 # Node (Husky)
 node_modules/

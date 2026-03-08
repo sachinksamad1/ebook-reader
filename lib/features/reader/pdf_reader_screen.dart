@@ -10,6 +10,7 @@ import 'reader_settings.dart';
 import 'add_note_sheet.dart';
 import 'chapter_sidebar.dart';
 import '../library/library_provider.dart';
+import '../settings/settings_provider.dart';
 
 class PdfReaderScreen extends ConsumerStatefulWidget {
   final Book book;
@@ -25,7 +26,6 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   late PdfViewerController _pdfController;
   bool _showControls = true;
   bool _showSidebar = false;
-  ReaderThemeMode _readerTheme = ReaderThemeMode.light;
   int _totalPages = 0;
   int _currentPage = 0;
   List<ChapterEntry> _pageChapters = [];
@@ -44,7 +44,12 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final readerTheme = ReaderTheme.fromMode(_readerTheme);
+    final settingsAsync = ref.watch(userSettingsProvider);
+    final settings = settingsAsync.valueOrNull;
+
+    final readerTheme = ReaderTheme.fromMode(
+      settings?.themeMode ?? ReaderThemeMode.light,
+    );
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -171,15 +176,29 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   }
 
   void _showSettings() {
+    final settingsAsync = ref.read(userSettingsProvider);
+    final settings = settingsAsync.valueOrNull;
+    if (settings == null) return;
+
     showModalBottomSheet(
       context: context,
       builder: (context) => ReaderSettingsSheet(
-        currentTheme: _readerTheme,
-        currentFontSize: 16,
+        currentTheme: settings.themeMode,
+        currentFontSize: settings.fontSize,
+        currentFontFamily: settings.fontFamily,
         onThemeChanged: (theme) {
-          setState(() => _readerTheme = theme);
+          ref
+              .read(userSettingsNotifierProvider.notifier)
+              .updateThemeMode(theme);
         },
-        onFontSizeChanged: (_) {},
+        onFontSizeChanged: (size) {
+          ref.read(userSettingsNotifierProvider.notifier).updateFontSize(size);
+        },
+        onFontFamilyChanged: (family) {
+          ref
+              .read(userSettingsNotifierProvider.notifier)
+              .updateFontFamily(family);
+        },
       ),
     );
   }
