@@ -45,7 +45,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(userSettingsProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settings = settingsAsync.value;
 
     final readerTheme = ReaderTheme.fromMode(
       settings?.themeMode ?? ReaderThemeMode.light,
@@ -177,7 +177,7 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
 
   void _showSettings() {
     final settingsAsync = ref.read(userSettingsProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settings = settingsAsync.value;
     if (settings == null) return;
 
     showModalBottomSheet(

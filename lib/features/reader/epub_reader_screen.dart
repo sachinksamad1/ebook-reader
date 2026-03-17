@@ -93,7 +93,7 @@ class _EpubReaderScreenState extends ConsumerState<EpubReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(userSettingsProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settings = settingsAsync.value;
 
     // Use default values while settings load to prevent flicker
     final readerTheme = ReaderTheme.fromMode(
@@ -324,7 +324,7 @@ class _EpubReaderScreenState extends ConsumerState<EpubReaderScreen> {
 
   void _showSettings() {
     final settingsAsync = ref.read(userSettingsProvider);
-    final settings = settingsAsync.valueOrNull;
+    final settings = settingsAsync.value;
     if (settings == null) return;
 
     showModalBottomSheet(

@@ -1,29 +1,25 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../../models/book.dart';
 import '../../services/firebase_service.dart';
 
-// Firebase service provider
 final firebaseServiceProvider = Provider<FirebaseService>((ref) {
   return FirebaseService();
 });
 
-// Stream of all books
 final booksStreamProvider = StreamProvider<List<Book>>((ref) {
   final service = ref.watch(firebaseServiceProvider);
   return service.streamBooks();
 });
 
-// Search query state
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-// Sort mode
 enum SortMode { recent, titleAsc, titleDesc }
 
 final sortModeProvider = StateProvider<SortMode>((ref) => SortMode.recent);
 
-// Filtered and sorted books
 final filteredBooksProvider = Provider<AsyncValue<List<Book>>>((ref) {
   final booksAsync = ref.watch(booksStreamProvider);
   final query = ref.watch(searchQueryProvider).toLowerCase();
@@ -56,7 +52,6 @@ final filteredBooksProvider = Provider<AsyncValue<List<Book>>>((ref) {
   });
 });
 
-// Book upload state
 final bookUploadProvider =
     StateNotifierProvider<BookUploadNotifier, AsyncValue<void>>((ref) {
       return BookUploadNotifier(ref.watch(firebaseServiceProvider));

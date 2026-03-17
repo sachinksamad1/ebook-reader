@@ -1,17 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../../models/user_settings.dart';
 import '../../core/theme/app_theme.dart';
 import '../reader/reader_settings.dart';
 import '../library/library_provider.dart';
 
-/// Stream provider that listens to the current user's settings from Firestore.
 final userSettingsProvider = StreamProvider<UserSettings>((ref) {
   final service = ref.watch(firebaseServiceProvider);
   return service.streamUserSettings();
 });
 
-/// Notifier to manage updating user settings locally and in Firestore.
 class UserSettingsNotifier extends StateNotifier<AsyncValue<UserSettings>> {
   final Ref _ref;
 
@@ -29,7 +28,7 @@ class UserSettingsNotifier extends StateNotifier<AsyncValue<UserSettings>> {
   }
 
   Future<void> updateFontSize(double size) async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
 
     final updated = current.copyWith(fontSize: size);
@@ -37,7 +36,7 @@ class UserSettingsNotifier extends StateNotifier<AsyncValue<UserSettings>> {
   }
 
   Future<void> updateFontFamily(ReaderFontFamily family) async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
 
     final updated = current.copyWith(fontFamily: family);
@@ -45,7 +44,7 @@ class UserSettingsNotifier extends StateNotifier<AsyncValue<UserSettings>> {
   }
 
   Future<void> updateThemeMode(ReaderThemeMode mode) async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
 
     final updated = current.copyWith(themeMode: mode);
@@ -53,7 +52,6 @@ class UserSettingsNotifier extends StateNotifier<AsyncValue<UserSettings>> {
   }
 
   Future<void> _saveSettings(UserSettings settings) async {
-    // Optimistic UI update
     state = AsyncValue.data(settings);
 
     try {
