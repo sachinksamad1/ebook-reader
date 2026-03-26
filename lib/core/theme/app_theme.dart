@@ -63,6 +63,25 @@ class AppTheme {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: _backgroundLight,
+      elevation: 0,
+      indicatorColor: _primaryColor.withValues(alpha: 0.1),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: _primaryColor,
+          );
+        }
+        return GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Colors.black54,
+        );
+      }),
+    ),
   );
 
   // ── Dark Theme ──
@@ -112,6 +131,25 @@ class AppTheme {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       backgroundColor: _surfaceDark,
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: _backgroundDark,
+      elevation: 0,
+      indicatorColor: _primaryColor.withValues(alpha: 0.2),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: _primaryColor,
+          );
+        }
+        return GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Colors.white60,
+        );
+      }),
     ),
   );
 }

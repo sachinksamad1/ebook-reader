@@ -10,6 +10,7 @@ import '../models/highlight.dart';
 import '../models/note.dart';
 import '../models/vocabulary.dart';
 import '../models/user_settings.dart';
+import '../models/collection.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instanceFor(
@@ -30,12 +31,11 @@ class FirebaseService {
   // BOOKS
   // ════════════════════════════════════════
 
-  /// Stream all books, ordered by last read
+  /// Stream all books
   Stream<List<Book>> streamBooks() {
     return _firestore
         .collection('books')
         .where('user_id', isEqualTo: _currentUserId)
-        .orderBy('last_read', descending: true)
         .snapshots()
         .map(
           (snapshot) =>
@@ -98,6 +98,23 @@ class FirebaseService {
     await _firestore.collection('books').doc(bookId).update(data);
   }
 
+  /// Update book collection and order
+  Future<void> updateBookMetadata(
+    String bookId, {
+    String? collectionId,
+    bool updateCollection = false,
+  }) async {
+    final data = <String, dynamic>{};
+    
+    if (updateCollection) {
+      data['collection_id'] = collectionId;
+    }
+    
+    if (data.isNotEmpty) {
+      await _firestore.collection('books').doc(bookId).update(data);
+    }
+  }
+
   /// Delete a book
   Future<void> deleteBook(String bookId) async {
     final book = await getBook(bookId);
@@ -148,6 +165,64 @@ class FirebaseService {
     await _firestore.collection('books').doc(bookId).update({
       'cover_url': FieldValue.delete(),
     });
+  }
+
+  // ════════════════════════════════════════
+  // COLLECTIONS
+  // ════════════════════════════════════════
+
+  Stream<List<Collection>> streamCollections() {
+    return _firestore
+        .collection('collections')
+        .where('user_id', isEqualTo: _currentUserId)
+        .orderBy('name')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Collection.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  Future<Collection> createCollection(String name, {String? description}) async {
+    final id = _uuid.v4();
+    final collection = Collection(
+      id: id,
+      userId: _currentUserId,
+      name: name,
+      description: description,
+    );
+    await _firestore
+        .collection('collections')
+        .doc(id)
+        .set(collection.toFirestore());
+    return collection;
+  }
+
+  Future<void> updateCollection(String id,
+      {String? name, String? description}) async {
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name;
+    if (description != null) data['description'] = description;
+
+    if (data.isNotEmpty) {
+      await _firestore.collection('collections').doc(id).update(data);
+    }
+  }
+
+  Future<void> deleteCollection(String id) async {
+    // Also remove collection_id from books in this collection
+    final books = await _firestore
+        .collection('books')
+        .where('collection_id', isEqualTo: id)
+        .get();
+
+    final batch = _firestore.batch();
+    for (final doc in books.docs) {
+      batch.update(doc.reference, {'collection_id': FieldValue.delete()});
+    }
+    batch.delete(_firestore.collection('collections').doc(id));
+    await batch.commit();
   }
 
   // ════════════════════════════════════════

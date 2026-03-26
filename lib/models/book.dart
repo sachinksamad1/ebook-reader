@@ -11,6 +11,7 @@ class Book {
   final DateTime? lastRead;
   final double progress; // 0.0 to 1.0
   final String? lastLocation;
+  final String? collectionId;
 
   Book({
     required this.id,
@@ -23,6 +24,7 @@ class Book {
     this.lastRead,
     this.progress = 0.0,
     this.lastLocation,
+    this.collectionId,
   });
 
   factory Book.fromFirestore(DocumentSnapshot doc) {
@@ -40,6 +42,7 @@ class Book {
           : null,
       progress: (data['progress'] ?? 0.0).toDouble(),
       lastLocation: data['lastLocation'] as String?,
+      collectionId: data['collection_id'] as String?,
     );
   }
 
@@ -54,6 +57,7 @@ class Book {
       'last_read': lastRead != null ? Timestamp.fromDate(lastRead!) : null,
       'progress': progress,
       if (lastLocation != null) 'lastLocation': lastLocation,
+      if (collectionId != null) 'collection_id': collectionId,
     };
   }
 
@@ -68,6 +72,7 @@ class Book {
     DateTime? lastRead,
     double? progress,
     String? lastLocation,
+    String? collectionId,
   }) {
     return Book(
       id: id ?? this.id,
@@ -80,6 +85,7 @@ class Book {
       lastRead: lastRead ?? this.lastRead,
       progress: progress ?? this.progress,
       lastLocation: lastLocation ?? this.lastLocation,
+      collectionId: collectionId ?? this.collectionId,
     );
   }
 }

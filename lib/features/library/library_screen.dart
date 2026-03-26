@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../models/book.dart';
+import '../../models/collection.dart';
 import '../reader/reader_screen.dart';
 import 'library_provider.dart';
 import 'book_card.dart';
@@ -29,6 +30,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final booksAsync = ref.watch(filteredBooksProvider);
+    final selectedCollectionId = ref.watch(selectedCollectionIdProvider);
+    final collectionsAsync = ref.watch(collectionsStreamProvider);
+
+    String title = 'My Library';
+    if (selectedCollectionId != null) {
+      collectionsAsync.whenData((collections) {
+        try {
+          final col = collections.firstWhere((c) => c.id == selectedCollectionId);
+          title = col.name;
+        } catch (_) {
+          title = 'Collection';
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +60,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ref.read(searchQueryProvider.notifier).state = value;
                 },
               )
-            : const Text('My Library'),
+            : Text(title),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -81,6 +96,68 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              child: Center(
+                child: Text(
+                  'Collections',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.library_books),
+              title: const Text('All Books'),
+              selected: selectedCollectionId == null,
+              onTap: () {
+                ref.read(selectedCollectionIdProvider.notifier).state = null;
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(),
+            Expanded(
+              child: collectionsAsync.when(
+                data: (collections) => ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: collections.length,
+                  itemBuilder: (context, index) {
+                    final col = collections[index];
+                    return ListTile(
+                      leading: const Icon(Icons.collections_bookmark),
+                      title: Text(col.name),
+                      selected: selectedCollectionId == col.id,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        onPressed: () => _editCollection(col),
+                      ),
+                      onTap: () {
+                        ref.read(selectedCollectionIdProvider.notifier).state = col.id;
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Create Collection'),
+              onTap: _createCollection,
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
       body: booksAsync.when(
         data: (books) {
           if (books.isEmpty) {
@@ -97,7 +174,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Your library is empty',
+                    'No books found',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Theme.of(
                         context,
@@ -106,7 +183,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tap + to add your first book',
+                    selectedCollectionId != null 
+                        ? 'Try adding books to this collection'
+                        : 'Tap + to add your first book',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
@@ -123,7 +202,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.58,
+                childAspectRatio: 0.55,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
@@ -283,6 +362,126 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Uploading book...')));
+    }
+  }
+
+  Future<void> _createCollection() async {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Collection'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+              autofocus: true,
+            ),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(labelText: 'Description (optional)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && nameController.text.isNotEmpty) {
+      await ref.read(collectionProvider.notifier).createCollection(
+            nameController.text.trim(),
+            description: descController.text.trim(),
+          );
+      if (mounted) Navigator.pop(context); // Close drawer
+    }
+  }
+
+  Future<void> _editCollection(Collection collection) async {
+    final nameController = TextEditingController(text: collection.name);
+    final descController = TextEditingController(text: collection.description);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Collection'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(labelText: 'Description (optional)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 'save' && nameController.text.isNotEmpty) {
+      await ref.read(collectionProvider.notifier).updateCollection(
+            collection.id,
+            name: nameController.text.trim(),
+            description: descController.text.trim(),
+          );
+    } else if (result == 'delete') {
+      if (!mounted) return;
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Collection'),
+          content: Text('Are you sure you want to delete "${collection.name}"? Books will not be deleted.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        if (ref.read(selectedCollectionIdProvider) == collection.id) {
+          ref.read(selectedCollectionIdProvider.notifier).state = null;
+        }
+        await ref.read(collectionProvider.notifier).deleteCollection(collection.id);
+      }
     }
   }
 }

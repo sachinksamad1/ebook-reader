@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/book.dart';
+import 'library_provider.dart';
 
-class BookCard extends StatelessWidget {
+class BookCard extends ConsumerWidget {
   final Book book;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -19,7 +21,7 @@ class BookCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return GestureDetector(
@@ -31,7 +33,6 @@ class BookCard extends StatelessWidget {
           children: [
             // Cover image or placeholder
             Expanded(
-              flex: 4,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -54,11 +55,9 @@ class BookCard extends StatelessWidget {
             ),
 
             // Book info
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -80,13 +79,13 @@ class BookCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         // File type badge
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
+                            horizontal: 8,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
@@ -141,14 +140,13 @@ class BookCard extends StatelessWidget {
                                 alpha: 0.4,
                               ),
                             ),
-                            onPressed: () => _showOptions(context),
+                            onPressed: () => _showOptions(context, ref),
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-              ),
             ),
           ],
         ),
@@ -186,13 +184,21 @@ class BookCard extends StatelessWidget {
     );
   }
 
-  void _showOptions(BuildContext context) {
+  void _showOptions(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: const Icon(Icons.collections_bookmark_outlined),
+              title: const Text('Manage Collection'),
+              onTap: () {
+                Navigator.pop(context);
+                _showCollectionSelector(context, ref);
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.image_outlined),
               title: const Text('Change Cover'),
@@ -228,6 +234,50 @@ class BookCard extends StatelessWidget {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showCollectionSelector(BuildContext context, WidgetRef ref) {
+    final collectionsAsync = ref.read(collectionsStreamProvider);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Collection'),
+        content: collectionsAsync.when(
+          data: (collections) {
+            if (collections.isEmpty) {
+              return const Text('No collections found. Create one first from the library menu.');
+            }
+            return SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  ListTile(
+                    title: const Text('None (Remove from Collection)'),
+                    onTap: () {
+                      ref.read(collectionProvider.notifier).addBookToCollection(book.id, null);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const Divider(),
+                  ...collections.map((col) => ListTile(
+                    title: Text(col.name),
+                    trailing: book.collectionId == col.id ? const Icon(Icons.check) : null,
+                    onTap: () {
+                      ref.read(collectionProvider.notifier).addBookToCollection(book.id, col.id);
+                      Navigator.pop(context);
+                    },
+                  )),
+                ],
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Text('Error: $e'),
         ),
       ),
     );

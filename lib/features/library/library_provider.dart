@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../models/book.dart';
+import '../../models/collection.dart';
 import '../../services/firebase_service.dart';
 
 final firebaseServiceProvider = Provider<FirebaseService>((ref) {
@@ -14,22 +15,34 @@ final booksStreamProvider = StreamProvider<List<Book>>((ref) {
   return service.streamBooks();
 });
 
+final collectionsStreamProvider = StreamProvider<List<Collection>>((ref) {
+  final service = ref.watch(firebaseServiceProvider);
+  return service.streamCollections();
+});
+
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
 enum SortMode { recent, titleAsc, titleDesc }
 
 final sortModeProvider = StateProvider<SortMode>((ref) => SortMode.recent);
+final selectedCollectionIdProvider = StateProvider<String?>((ref) => null);
 
 final filteredBooksProvider = Provider<AsyncValue<List<Book>>>((ref) {
   final booksAsync = ref.watch(booksStreamProvider);
   final query = ref.watch(searchQueryProvider).toLowerCase();
   final sortMode = ref.watch(sortModeProvider);
+  final selectedCollectionId = ref.watch(selectedCollectionIdProvider);
 
   return booksAsync.whenData((books) {
     var filtered = books.where((book) {
-      if (query.isEmpty) return true;
-      return book.title.toLowerCase().contains(query) ||
+      final matchesQuery = query.isEmpty ||
+          book.title.toLowerCase().contains(query) ||
           book.author.toLowerCase().contains(query);
+      
+      final matchesCollection = selectedCollectionId == null || 
+          book.collectionId == selectedCollectionId;
+
+      return matchesQuery && matchesCollection;
     }).toList();
 
     switch (sortMode) {
@@ -51,6 +64,56 @@ final filteredBooksProvider = Provider<AsyncValue<List<Book>>>((ref) {
     return filtered;
   });
 });
+
+final collectionProvider =
+    StateNotifierProvider<CollectionNotifier, AsyncValue<void>>((ref) {
+  return CollectionNotifier(ref.watch(firebaseServiceProvider));
+});
+
+class CollectionNotifier extends StateNotifier<AsyncValue<void>> {
+  final FirebaseService _service;
+  CollectionNotifier(this._service) : super(const AsyncData(null));
+
+  Future<void> createCollection(String name, {String? description}) async {
+    state = const AsyncLoading();
+    try {
+      await _service.createCollection(name, description: description);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> updateCollection(String id,
+      {String? name, String? description}) async {
+    state = const AsyncLoading();
+    try {
+      await _service.updateCollection(id, name: name, description: description);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> deleteCollection(String id) async {
+    state = const AsyncLoading();
+    try {
+      await _service.deleteCollection(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> addBookToCollection(String bookId, String? collectionId) async {
+    try {
+      await _service.updateBookMetadata(bookId,
+          collectionId: collectionId, updateCollection: true);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+}
 
 final bookUploadProvider =
     StateNotifierProvider<BookUploadNotifier, AsyncValue<void>>((ref) {
