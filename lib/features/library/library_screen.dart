@@ -201,10 +201,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             padding: const EdgeInsets.all(16),
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.55,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+                crossAxisCount: 3,
+                childAspectRatio: 0.5,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
               ),
               itemCount: books.length,
               itemBuilder: (context, index) {

@@ -234,6 +234,28 @@ Select text → Extract word → Call Dictionary API → Show popup → Optional
 
 ---
 
+## 📦 Release & Versioning
+
+The project uses GitHub Actions for automated Android releases.
+
+### Triggering a New Release
+
+1. **Update the version** in `pubspec.yaml` (e.g., `version: 1.0.1+2`).
+2. **Add entry to `CHANGELOG.md`** with the new version and its changes.
+3. **Commit and Push** these changes to `main`.
+4. **Create a Git Tag** matching the version (e.g., `v1.0.1+2`):
+   ```bash
+   git tag v1.0.1+2
+   git push origin v1.0.1+2
+   ```
+
+The **Build & Release** workflow will automatically:
+- Build the Android APK in release mode.
+- Create a new GitHub Release with the APK attached.
+- Use the content from `CHANGELOG.md` for the release notes.
+
+---
+
 ## 📜 License
 
 This project is for personal use.

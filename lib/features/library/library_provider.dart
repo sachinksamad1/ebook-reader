@@ -115,6 +115,56 @@ class CollectionNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
+final bookActionProvider =
+    StateNotifierProvider<BookActionNotifier, AsyncValue<void>>((ref) {
+  return BookActionNotifier(ref.watch(firebaseServiceProvider));
+});
+
+class BookActionNotifier extends StateNotifier<AsyncValue<void>> {
+  final FirebaseService _service;
+  BookActionNotifier(this._service) : super(const AsyncData(null));
+
+  Future<void> updateBookInfo(String id, {String? title, String? author}) async {
+    state = const AsyncLoading();
+    try {
+      await _service.updateBookInfo(id, title: title, author: author);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> deleteBook(String id) async {
+    state = const AsyncLoading();
+    try {
+      await _service.deleteBook(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> updateCover(String id, File file) async {
+    state = const AsyncLoading();
+    try {
+      await _service.updateBookCover(id, file);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> deleteCover(String id, String url) async {
+    state = const AsyncLoading();
+    try {
+      await _service.deleteBookCover(id, url);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+}
+
 final bookUploadProvider =
     StateNotifierProvider<BookUploadNotifier, AsyncValue<void>>((ref) {
       return BookUploadNotifier(ref.watch(firebaseServiceProvider));

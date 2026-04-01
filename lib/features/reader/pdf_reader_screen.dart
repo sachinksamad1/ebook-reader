@@ -108,6 +108,9 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                     widget.file,
                     controller: _pdfController,
                     canShowScrollHead: _showControls,
+                    pageLayoutMode: PdfPageLayoutMode.continuous,
+                    scrollDirection: PdfScrollDirection.vertical,
+                    enableDoubleTapZooming: true,
                     onDocumentLoaded: (PdfDocumentLoadedDetails details) {
                       if (mounted) {
                         setState(() {
@@ -259,7 +262,7 @@ class _SmoothScrollBehavior extends ScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
     return const BouncingScrollPhysics(
-      decelerationRate: ScrollDecelerationRate.fast,
+      parent: AlwaysScrollableScrollPhysics(),
     );
   }
 }

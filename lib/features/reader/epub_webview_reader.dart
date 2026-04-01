@@ -174,6 +174,7 @@ class EpubWebViewReaderState extends State<EpubWebViewReader> {
     html {
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
+      overflow-y: scroll;
     }
     body {
       background-color: $bgHex;
@@ -185,6 +186,7 @@ class EpubWebViewReaderState extends State<EpubWebViewReader> {
       word-wrap: break-word;
       overflow-wrap: break-word;
       -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
     img {
       max-width: 100%;
@@ -232,15 +234,11 @@ class EpubWebViewReaderState extends State<EpubWebViewReader> {
 
   <script>
     // Scroll progress reporter
-    var _scrollTimer = null;
     window.addEventListener('scroll', function() {
-      if (_scrollTimer) clearTimeout(_scrollTimer);
-      _scrollTimer = setTimeout(function() {
-        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        var scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-        var percent = scrollHeight > 0 ? (scrollTop / scrollHeight) : 0;
-        FlutterBridge.postMessage('scroll:' + percent.toFixed(4));
-      }, 100);
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      var scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var percent = scrollHeight > 0 ? (scrollTop / scrollHeight) : 0;
+      FlutterBridge.postMessage('scroll:' + percent.toFixed(4));
     }, { passive: true });
 
     // Text selection detection

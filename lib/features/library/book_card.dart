@@ -33,30 +33,60 @@ class BookCard extends ConsumerWidget {
           children: [
             // Cover image or placeholder
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      _getBookColor(book.title),
-                      _getBookColor(book.title).withValues(alpha: 0.7),
-                    ],
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _getBookColor(book.title),
+                          _getBookColor(book.title).withValues(alpha: 0.7),
+                        ],
+                      ),
+                    ),
+                    child: book.coverUrl != null
+                        ? Image.network(
+                            book.coverUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => _buildPlaceholder(theme),
+                          )
+                        : _buildPlaceholder(theme),
                   ),
-                ),
-                child: book.coverUrl != null
-                    ? Image.network(
-                        book.coverUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _buildPlaceholder(theme),
-                      )
-                    : _buildPlaceholder(theme),
+                  // File type badge overlay
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer.withValues(
+                          alpha: 0.9,
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        book.fileType.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
             // Book info
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -66,6 +96,7 @@ class BookCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -74,41 +105,22 @@ class BookCard extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        // File type badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            book.fileType.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         // Progress indicator
                         Expanded(
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(2),
                             child: LinearProgressIndicator(
                               value: book.progress,
-                              minHeight: 4,
+                              minHeight: 3,
                               backgroundColor:
                                   theme.colorScheme.surfaceContainerHighest,
                               valueColor: AlwaysStoppedAnimation(
@@ -121,19 +133,19 @@ class BookCard extends ConsumerWidget {
                         Text(
                           '${(book.progress * 100).toInt()}%',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 9,
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.5,
                             ),
                           ),
                         ),
-                        // Delete button
+                        // Options button
                         SizedBox(
-                          height: 24,
-                          width: 24,
+                          height: 20,
+                          width: 20,
                           child: IconButton(
                             padding: EdgeInsets.zero,
-                            iconSize: 16,
+                            iconSize: 14,
                             icon: Icon(
                               Icons.more_vert,
                               color: theme.colorScheme.onSurface.withValues(
@@ -192,6 +204,14 @@ class BookCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Rename'),
+              onTap: () {
+                Navigator.pop(context);
+                _showRenameDialog(context, ref);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.collections_bookmark_outlined),
               title: const Text('Manage Collection'),
               onTap: () {
@@ -235,6 +255,62 @@ class BookCard extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context, WidgetRef ref) {
+    final titleController = TextEditingController(text: book.title);
+    final authorController = TextEditingController(text: book.author);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Book'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                hintText: 'Enter book title',
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: authorController,
+              decoration: const InputDecoration(
+                labelText: 'Author',
+                hintText: 'Enter author name',
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newTitle = titleController.text.trim();
+              final newAuthor = authorController.text.trim();
+              
+              if (newTitle.isNotEmpty) {
+                ref.read(bookActionProvider.notifier).updateBookInfo(
+                  book.id,
+                  title: newTitle,
+                  author: newAuthor.isEmpty ? 'Unknown' : newAuthor,
+                );
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }

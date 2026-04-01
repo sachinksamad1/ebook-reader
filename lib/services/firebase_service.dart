@@ -98,6 +98,21 @@ class FirebaseService {
     await _firestore.collection('books').doc(bookId).update(data);
   }
 
+  /// Update book title and author
+  Future<void> updateBookInfo(
+    String bookId, {
+    String? title,
+    String? author,
+  }) async {
+    final data = <String, dynamic>{};
+    if (title != null) data['title'] = title;
+    if (author != null) data['author'] = author;
+
+    if (data.isNotEmpty) {
+      await _firestore.collection('books').doc(bookId).update(data);
+    }
+  }
+
   /// Update book collection and order
   Future<void> updateBookMetadata(
     String bookId, {
